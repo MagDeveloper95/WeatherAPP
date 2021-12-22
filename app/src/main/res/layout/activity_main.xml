@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
 
-
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
@@ -46,7 +45,6 @@
                 android:background="@color/chipItemBackgroundColor"
                 android:fillViewport="false"
                 app:defaultNavHost="true" />
-
         </RelativeLayout>
 
 
