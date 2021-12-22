@@ -15,15 +15,15 @@ import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
-    public Button button;
-    public TextView textView;
+
+    public View CanvasArea;
     public static JSONObject jsonStatic;
     public String municipio = "Córdoba";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        CanvasArea = findViewById(R.id.action_container);
 
         /*
         this.button = findViewById(R.id.button);
