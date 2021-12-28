@@ -36,15 +36,14 @@
 
             </androidx.appcompat.widget.Toolbar>
 
-            <View
-                android:id="@+id/container_fragment"
-                android:name="androidx.navigation.fragment.NavHostFragment"
+            <lecho.lib.hellocharts.view.LineChartView
+                android:id="@+id/TempGraph"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_below="@id/toolbar"
-                android:background="@color/chipItemBackgroundColor"
-                android:fillViewport="false"
-                app:defaultNavHost="true" />
+                android:layout_below="@+id/toolbar"
+                android:layout_marginTop="4dp" />
+
+
         </RelativeLayout>
 
 
