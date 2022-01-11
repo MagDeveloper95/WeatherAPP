@@ -21,6 +21,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -58,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                     try {
+                        
                         //municipio = getText();
                         System.out.println("Entro al botón");
                         JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/weather?q=" + municipio + ",,ES&lang=es&units=metric&appid=df120d9fec587d76e8732e07c21a99cf").get();
@@ -74,9 +78,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
-
         }
-    
     //Introduce una ciudad y si la encuentra devuelve lat y lon del JSON 
     public void getCity (String city){
         if(city.equals("")){
@@ -89,12 +91,13 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println("No se ha introducido una ciudad válida");
                 }else{
                     try {
-                        JSONArray json = new JSONArray();
+                        JSONArray json = new JSONArray(readJSONFromAsset());
                         for (int i = 0; i < json.length(); i++) {
                             JSONObject jsonObject = json.getJSONObject(i);
                             if (jsonObject.getString("city").equals(city)) {
                                 lat = jsonObject.getJSONObject("lat").toString();
                                 lon = jsonObject.getJSONObject("lng").toString();
+                                System.out.println("Latitud: " + lat + " Longitud: " + lon);
                             }
                         }
                     } catch (JSONException e) {
@@ -104,6 +107,21 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+    public String readJSONFromAsset() {
+        String json = null;
+        try {
+            InputStream is = getAssets().open("es.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
+    } 
     /**
      * Método que pulsando el botón, muestra la gráfica de temperaturas
      */
