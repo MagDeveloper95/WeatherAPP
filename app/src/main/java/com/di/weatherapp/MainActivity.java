@@ -1,6 +1,6 @@
 package com.di.weatherapp;
 
-import androidx.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     public EditText editText;
     public TextView textView;
     public Button button;
+    public String lat;
+    public String lon;
 
 
     @Override
@@ -55,25 +57,53 @@ public class MainActivity extends AppCompatActivity {
         this.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
-                    //municipio = getText();
-                    System.out.println("Entro al botón");
-                    JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/weather?q=" + municipio + ",,ES&lang=es&units=metric&appid=df120d9fec587d76e8732e07c21a99cf").get();
-                    JSONObject main = json.getJSONObject("main");
-                    JSONArray weather = json.getJSONArray("weather");
-                    setTextView("Municipio: " + json.get("name").toString() + "\n" +
-                            "Temperatura Actual= " + main.get("temp").toString() + "ªC" + "\n" +
-                            "Temperatura Máxima = " + main.get("temp_max").toString() + "ªC" + "\n" +
-                            "Temperatura Mínima = " + main.get("temp_min").toString() + "ªC" + "\n" +
-                            "Humedad = " + main.get("humidity").toString() + "%" + "\n" +
-                            "Descripción: " + weather.getJSONObject(0).get("description").toString().substring(0, 1).toUpperCase() + weather.getJSONObject(0).get("description").toString().substring(1));
-                } catch (ExecutionException | InterruptedException | JSONException e) {
-                    e.printStackTrace();
+                    try {
+                        //municipio = getText();
+                        System.out.println("Entro al botón");
+                        JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/weather?q=" + municipio + ",,ES&lang=es&units=metric&appid=df120d9fec587d76e8732e07c21a99cf").get();
+                        JSONObject main = json.getJSONObject("main");
+                        JSONArray weather = json.getJSONArray("weather");
+                        setTextView("Municipio: " + json.get("name").toString() + "\n" +
+                                "Temperatura Actual= " + main.get("temp").toString() + "ªC" + "\n" +
+                                "Temperatura Máxima = " + main.get("temp_max").toString() + "ªC" + "\n" +
+                                "Temperatura Mínima = " + main.get("temp_min").toString() + "ªC" + "\n" +
+                                "Humedad = " + main.get("humidity").toString() + "%" + "\n" +
+                                "Descripción: " + weather.getJSONObject(0).get("description").toString().substring(0, 1).toUpperCase() + weather.getJSONObject(0).get("description").toString().substring(1));
+                    } catch (ExecutionException | InterruptedException | JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+        }
+    
+    //Introduce una ciudad y si la encuentra devuelve lat y lon del JSON 
+    public void getCity (String city){
+        if(city.equals("")){
+           System.out.println("No se ha introducido ninguna ciudad");
+        }else{
+            if(city.length()<0){
+               System.out.println("No se ha introducido ninguna ciudad");
+            }else{
+                if(city.matches("[0-9]+")){
+                    System.out.println("No se ha introducido una ciudad válida");
+                }else{
+                    try {
+                        JSONArray json = new JSONArray();
+                        for (int i = 0; i < json.length(); i++) {
+                            JSONObject jsonObject = json.getJSONObject(i);
+                            if (jsonObject.getString("city").equals(city)) {
+                                lat = jsonObject.getJSONObject("lat").toString();
+                                lon = jsonObject.getJSONObject("lng").toString();
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-        });
+        }
     }
-
     /**
      * Método que pulsando el botón, muestra la gráfica de temperaturas
      */
