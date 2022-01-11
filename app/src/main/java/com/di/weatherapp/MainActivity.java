@@ -61,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                     try {
-                        
                         //municipio = getText();
                         System.out.println("Entro al botón");
                         JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/weather?q=" + municipio + ",,ES&lang=es&units=metric&appid=df120d9fec587d76e8732e07c21a99cf").get();
@@ -95,8 +94,8 @@ public class MainActivity extends AppCompatActivity {
                         for (int i = 0; i < json.length(); i++) {
                             JSONObject jsonObject = json.getJSONObject(i);
                             if (jsonObject.getString("city").equals(city)) {
-                                lat = jsonObject.getJSONObject("lat").toString();
-                                lon = jsonObject.getJSONObject("lng").toString();
+                                lat = jsonObject.getString("lat");
+                                lon = jsonObject.getString("lng");
                                 System.out.println("Latitud: " + lat + " Longitud: " + lon);
                             }
                         }
