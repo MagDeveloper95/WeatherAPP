@@ -39,9 +39,6 @@ class RetrieveFeedTask extends AsyncTask<String, Void, JSONObject> {
             String jsonText = readAll(rd);
             JSONObject json = new JSONObject(jsonText);
             MainActivity.jsonStatic = json;
-
-
-            JSONObject main = (JSONObject) json.get("main");
             return json;
         } finally {
             is.close();

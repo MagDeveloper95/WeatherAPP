@@ -21,10 +21,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
+import java.text.SimpleDateFormat;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -32,17 +36,20 @@ public class MainActivity extends AppCompatActivity {
 
     public static JSONObject jsonStatic;
     public String municipio = "Córdoba";
-    private String[] xdata = {"L", "M", "X", "J", "V"};
+    private String[] xdata = {"L", "M", "X", "J", "V", "S", "D", "L"};
+    private String[] days = new String[8];
     private int[] yfata = {0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
-    private float[] linedata = {0, 10, 6, 30, 5};
-    private float[] linedata2 = {10, 14, 12, 40, 15};
+    public float[] linedata = {0, 10, 6, 30, 5, 10, 12, 13};
+    public float[] linedata2 = {10, 14, 12, 40, 15, 18, 20, 23};
     private LinearLayout root;
     public Button boton;
     public EditText editText;
     public TextView textView;
     public Button button;
-    public String lat;
-    public String lon;
+
+    public String lat = "37.88";
+    public String lon = "-4.77";
+
 
 
     @Override
@@ -60,21 +67,28 @@ public class MainActivity extends AppCompatActivity {
         this.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                    try {
-                        //municipio = getText();
-                        System.out.println("Entro al botón");
-                        JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/weather?q=" + municipio + ",,ES&lang=es&units=metric&appid=df120d9fec587d76e8732e07c21a99cf").get();
-                        JSONObject main = json.getJSONObject("main");
-                        JSONArray weather = json.getJSONArray("weather");
-                        setTextView("Municipio: " + json.get("name").toString() + "\n" +
-                                "Temperatura Actual= " + main.get("temp").toString() + "ªC" + "\n" +
-                                "Temperatura Máxima = " + main.get("temp_max").toString() + "ªC" + "\n" +
-                                "Temperatura Mínima = " + main.get("temp_min").toString() + "ªC" + "\n" +
-                                "Humedad = " + main.get("humidity").toString() + "%" + "\n" +
-                                "Descripción: " + weather.getJSONObject(0).get("description").toString().substring(0, 1).toUpperCase() + weather.getJSONObject(0).get("description").toString().substring(1));
-                    } catch (ExecutionException | InterruptedException | JSONException e) {
-                        e.printStackTrace();
+
+                try {
+                    //municipio = getText();
+                    JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&units=metric&lang=es&exclude=minutely,hourly&appid=df120d9fec587d76e8732e07c21a99cf").get();
+                    JSONObject current = json.getJSONObject("current");
+                    JSONArray daily = json.getJSONArray("daily");
+                    System.out.println(current.get("temp").toString());
+                    System.out.println(daily);
+
+                    for (int i = 0; i < daily.length(); i++) {
+                        System.out.println(daily.getJSONObject(i).get("temp").toString());
+                        java.util.Date time = new java.util.Date((long) (Integer.parseInt(daily.getJSONObject(i).get("dt").toString()))*1000);
+                        Calendar c = Calendar.getInstance();
+                        c.setTime(time);
+                        String dayWeekText = new SimpleDateFormat("EEEE").format(time);
+                        days[i] = dayWeekText;
+                        linedata[i] = Float.parseFloat(daily.getJSONObject(i).getJSONObject("temp").get("min").toString());
+                        linedata2[i] = Float.parseFloat(daily.getJSONObject(i).getJSONObject("temp").get("max").toString());
                     }
+
+                } catch (ExecutionException | InterruptedException | JSONException e) {
+                    e.printStackTrace();
                 }
             });
         }
@@ -102,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+
                 }
             }
         }
@@ -122,9 +137,20 @@ public class MainActivity extends AppCompatActivity {
         return json;
     } 
     /**
+     *  JSONArray weather = json.getJSONArray("weather");
+     *                     setTextView("Municipio: " + json.get("name").toString() + "\n" +
+     *                             "Temperatura Actual= " + main.get("temp").toString() + "ªC" + "\n" +
+     *                             "Temperatura Máxima = " + main.get("temp_max").toString() + "ªC" + "\n" +
+     *                             "Temperatura Mínima = " + main.get("temp_min").toString() + "ªC" + "\n" +
+     *                             "Humedad = " + main.get("humidity").toString() + "%" + "\n" +
+     *                             "Descripción: " + weather.getJSONObject(0).get("description").toString().substring(0, 1).toUpperCase() + weather.getJSONObject(0).get("description").toString().substring(1));
+     */
+
+    /**
      * Método que pulsando el botón, muestra la gráfica de temperaturas
      */
     public void drawChart(View view) {
+        setXdata(days);
         LineChartView linechartview = new LineChartView(this);
         linechartview.setChartdate(xdata, yfata, linedata, linedata2);
         this.root = (LinearLayout) findViewById(R.id.view);
@@ -135,6 +161,40 @@ public class MainActivity extends AppCompatActivity {
          */
         this.root.addView(linechartview);
         //this.view.addView(linechartview);
+    }
+
+    public void setXdata(String[] days){
+        for (int i = 0; i < this.xdata.length; i++) {
+            this.xdata[i] = setDay(days[i]);
+        }
+    }
+
+    public String setDay(String day){
+        String setDay = "";
+        switch (day){
+            case "lunes" :
+                setDay = "L";
+                break;
+            case "martes" :
+                setDay = "M";
+                break;
+            case "miércoles" :
+                setDay = "X";
+                break;
+            case "jueves" :
+                setDay = "J";
+                break;
+            case "viernes" :
+                setDay = "V";
+                break;
+            case "sábado" :
+                setDay = "S";
+                break;
+            case "domingo" :
+                setDay = "D";
+                break;
+        }
+        return setDay;
     }
 
 
