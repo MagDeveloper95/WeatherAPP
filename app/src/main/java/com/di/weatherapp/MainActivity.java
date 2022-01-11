@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -28,62 +29,73 @@ public class MainActivity extends AppCompatActivity {
 
     public static JSONObject jsonStatic;
     public String municipio = "Córdoba";
-    private String[] xdata={"L","M","X","J","V"};
-    private int[] yfata={0,5,10,15,20,25,30,35,40,45,50};
-    private float[] linedata={0,10,6,30,5};
-    private float[] linedata2={10,-4,12,40,15};
-    private LinearLayout view;
+    private String[] xdata = {"L", "M", "X", "J", "V"};
+    private int[] yfata = {0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
+    private float[] linedata = {0, 10, 6, 30, 5};
+    private float[] linedata2 = {10, 14, 12, 40, 15};
+    private LinearLayout root;
     public Button boton;
+    public EditText editText;
+    public TextView textView;
+    public Button button;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        this.view = (LinearLayout) findViewById(R.id.view);
-        this.boton = (Button) findViewById(R.id.boton);
-        Context context = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        /*
+
+        this.boton = findViewById(R.id.boton);
         this.button = findViewById(R.id.button);
-        this.textView = findViewById(R.id.textView);
+        this.editText = findViewById(R.id.edittext);
+        this.textView = findViewById(R.id.textview);
+
+
 
         this.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
                     //municipio = getText();
-                    JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/weather?q="+municipio+",,ES&lang=es&units=metric&appid=df120d9fec587d76e8732e07c21a99cf").get();
+                    System.out.println("Entro al botón");
+                    JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/weather?q=" + municipio + ",,ES&lang=es&units=metric&appid=df120d9fec587d76e8732e07c21a99cf").get();
                     JSONObject main = json.getJSONObject("main");
                     JSONArray weather = json.getJSONArray("weather");
-                    setTextView("Municipio: "+json.get("name").toString()+"\n"+
-                            "Temperatura Actual= "+main.get("temp").toString()+"ªC"+"\n"+
-                            "Temperatura Máxima = "+main.get("temp_max").toString()+"ªC"+"\n"+
-                            "Temperatura Mínima = "+main.get("temp_min").toString()+"ªC"+"\n"+
-                            "Humedad = "+main.get("humidity").toString()+"%"+"\n"+
-                            "Descripción: "+weather.getJSONObject(0).get("description").toString().substring(0, 1).toUpperCase() + weather.getJSONObject(0).get("description").toString().substring(1));
+                    setTextView("Municipio: " + json.get("name").toString() + "\n" +
+                            "Temperatura Actual= " + main.get("temp").toString() + "ªC" + "\n" +
+                            "Temperatura Máxima = " + main.get("temp_max").toString() + "ªC" + "\n" +
+                            "Temperatura Mínima = " + main.get("temp_min").toString() + "ªC" + "\n" +
+                            "Humedad = " + main.get("humidity").toString() + "%" + "\n" +
+                            "Descripción: " + weather.getJSONObject(0).get("description").toString().substring(0, 1).toUpperCase() + weather.getJSONObject(0).get("description").toString().substring(1));
                 } catch (ExecutionException | InterruptedException | JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
-
-         */
     }
 
     /**
      * Método que pulsando el botón, muestra la gráfica de temperaturas
-     *
-     * @param view
      */
-    public void onButton(View view){
+    public void drawChart(View view) {
         LineChartView linechartview = new LineChartView(this);
-        linechartview.setChartdate(xdata,yfata,linedata, linedata2);
-        /**
-         * Quiero que el linechartview se vea solo en el activity_main, pero no consigo meterlo en algún
-         * contenedor, solo puedo machacar el content que hay.
+        linechartview.setChartdate(xdata, yfata, linedata, linedata2);
+        this.root = (LinearLayout) findViewById(R.id.view);
+
+        /*Quiero que el linechartview se vea solo en el activity_main, pero no consigo meterlo en
+         *algún
+         *contenedor, solo puedo machacar el content que hay.
          */
-        setContentView(linechartview);
+        this.root.addView(linechartview);
+        //this.view.addView(linechartview);
     }
+
+
+    public void setTextView(String view) {
+        System.out.println(view);
+        this.textView.setText(view);
+    }
+
 
     /**
      * Clase que pinta la gráfica de lineas.
@@ -266,11 +278,4 @@ public class MainActivity extends AppCompatActivity {
             return max;
         }
     }
-
-    /*
-        public void setTextView(String view) {
-            this.textView.setText(view);
-        }
-        */
-
 }
