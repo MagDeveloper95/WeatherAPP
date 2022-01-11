@@ -1,6 +1,7 @@
 package com.di.weatherapp;
 
-import org.jetbrains.annotations.Nullable;
+//import org.jetbrains.annotations.Nullable;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -63,14 +64,13 @@ public class MainActivity extends AppCompatActivity {
         this.textView = findViewById(R.id.textview);
 
 
-
         this.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 try {
-                    //municipio = getText();
-                    JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&units=metric&lang=es&exclude=minutely,hourly&appid=df120d9fec587d76e8732e07c21a99cf").get();
+                    getCity(editText.getText().toString());
+                    JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&units=metric&lang=es&exclude=minutely,hourly&appid=df120d9fec587d76e8732e07c21a99cf").get();
                     JSONObject current = json.getJSONObject("current");
                     JSONArray daily = json.getJSONArray("daily");
                     System.out.println(current.get("temp").toString());
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
                     for (int i = 0; i < daily.length(); i++) {
                         System.out.println(daily.getJSONObject(i).get("temp").toString());
-                        java.util.Date time = new java.util.Date((long) (Integer.parseInt(daily.getJSONObject(i).get("dt").toString()))*1000);
+                        java.util.Date time = new java.util.Date((long) (Integer.parseInt(daily.getJSONObject(i).get("dt").toString())) * 1000);
                         Calendar c = Calendar.getInstance();
                         c.setTime(time);
                         String dayWeekText = new SimpleDateFormat("EEEE").format(time);
@@ -90,8 +90,10 @@ public class MainActivity extends AppCompatActivity {
                 } catch (ExecutionException | InterruptedException | JSONException e) {
                     e.printStackTrace();
                 }
-            });
-        }
+            }
+        });
+    }
+
     //Introduce una ciudad y si la encuentra devuelve lat y lon del JSON 
     public void getCity (String city){
         if(city.equals("")){
@@ -150,17 +152,13 @@ public class MainActivity extends AppCompatActivity {
      * Método que pulsando el botón, muestra la gráfica de temperaturas
      */
     public void drawChart(View view) {
+        System.out.println("Dibujo");
         setXdata(days);
         LineChartView linechartview = new LineChartView(this);
         linechartview.setChartdate(xdata, yfata, linedata, linedata2);
         this.root = (LinearLayout) findViewById(R.id.view);
-
-        /*Quiero que el linechartview se vea solo en el activity_main, pero no consigo meterlo en
-         *algún
-         *contenedor, solo puedo machacar el content que hay.
-         */
+        this.root.invalidate();
         this.root.addView(linechartview);
-        //this.view.addView(linechartview);
     }
 
     public void setXdata(String[] days){
