@@ -1,6 +1,6 @@
 package com.di.weatherapp;
 
-import androidx.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -21,7 +21,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
 import java.text.SimpleDateFormat;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -41,8 +46,10 @@ public class MainActivity extends AppCompatActivity {
     public EditText editText;
     public TextView textView;
     public Button button;
+
     public String lat = "37.88";
     public String lon = "-4.77";
+
 
 
     @Override
@@ -60,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         this.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 try {
                     //municipio = getText();
                     JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&units=metric&lang=es&exclude=minutely,hourly&appid=df120d9fec587d76e8732e07c21a99cf").get();
@@ -82,10 +90,52 @@ public class MainActivity extends AppCompatActivity {
                 } catch (ExecutionException | InterruptedException | JSONException e) {
                     e.printStackTrace();
                 }
-            }
-        });
-    }
+            });
+        }
+    //Introduce una ciudad y si la encuentra devuelve lat y lon del JSON 
+    public void getCity (String city){
+        if(city.equals("")){
+           System.out.println("No se ha introducido ninguna ciudad");
+        }else{
+            if(city.length()<0){
+               System.out.println("No se ha introducido ninguna ciudad");
+            }else{
+                if(city.matches("[0-9]+")){
+                    System.out.println("No se ha introducido una ciudad válida");
+                }else{
+                    try {
+                        JSONArray json = new JSONArray(readJSONFromAsset());
+                        for (int i = 0; i < json.length(); i++) {
+                            JSONObject jsonObject = json.getJSONObject(i);
+                            if (jsonObject.getString("city").equals(city)) {
+                                lat = jsonObject.getString("lat");
+                                lon = jsonObject.getString("lng");
+                                System.out.println("Latitud: " + lat + " Longitud: " + lon);
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
 
+                }
+            }
+        }
+    }
+    public String readJSONFromAsset() {
+        String json = null;
+        try {
+            InputStream is = getAssets().open("es.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
+    } 
     /**
      *  JSONArray weather = json.getJSONArray("weather");
      *                     setTextView("Municipio: " + json.get("name").toString() + "\n" +
