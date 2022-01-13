@@ -1,10 +1,12 @@
 package com.di.weatherapp;
 
 //import org.jetbrains.annotations.Nullable;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -17,6 +19,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,14 +46,13 @@ public class MainActivity extends AppCompatActivity {
     public float[] linedata = {0, 10, 6, 30, 5, 10, 12, 13};
     public float[] linedata2 = {10, 14, 12, 40, 15, 18, 20, 23};
     private LinearLayout root;
-    public Button boton;
+    public Button boton;       //botón de ciudad
     public EditText editText;
     public TextView textView;
-    public Button button;
+    public Button button;      //botón de temperatura
 
     public String lat = "37.88";
     public String lon = "-4.77";
-
 
 
     @Override
@@ -58,33 +60,46 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        this.root = (LinearLayout) findViewById(R.id.view);
         this.boton = findViewById(R.id.boton);
         this.button = findViewById(R.id.button);
         this.editText = findViewById(R.id.edittext);
         this.textView = findViewById(R.id.textview);
 
+        this.boton.setEnabled(false);
 
+
+        /**
+         * Método que pulsando el botón de "Obtener Datos", comprueba la ciudad introducida si es
+         * válida, comprobando el JSON de las ciudades, si es válida, setea la lat y lon, después
+         * hace una petición a la API y si obtiene los datos correctamente los setea y habilita el
+         * botón de ver temperatura.
+         */
         this.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                boolean enableButton = false;
                 try {
-                    getCity(editText.getText().toString());
+                    enableButton = getCity(editText.getText().toString());
+                    //Realizamos la petición a la API
                     JSONObject json = new RetrieveFeedTask().execute("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&units=metric&lang=es&exclude=minutely,hourly&appid=df120d9fec587d76e8732e07c21a99cf").get();
                     JSONObject current = json.getJSONObject("current");
                     JSONArray daily = json.getJSONArray("daily");
-                    System.out.println(current.get("temp").toString());
-                    System.out.println(daily);
+                    showToast("Datos cargados correctamente");
+                    boton.setEnabled(enableButton);
 
                     for (int i = 0; i < daily.length(); i++) {
-                        System.out.println(daily.getJSONObject(i).get("temp").toString());
+                        //Parseamos el dt: UNIX a Date, para tratarlo en JAVA
                         java.util.Date time = new java.util.Date((long) (Integer.parseInt(daily.getJSONObject(i).get("dt").toString())) * 1000);
                         Calendar c = Calendar.getInstance();
                         c.setTime(time);
                         String dayWeekText = new SimpleDateFormat("EEEE").format(time);
-                        days[i] = dayWeekText;
-                        linedata[i] = Float.parseFloat(daily.getJSONObject(i).getJSONObject("temp").get("min").toString());
-                        linedata2[i] = Float.parseFloat(daily.getJSONObject(i).getJSONObject("temp").get("max").toString());
+                        days[i] = dayWeekText; //Seteamos los días de la semana.
+                        //Obtenemos los valores de las temperaturas y las seteamos en las variables globales.
+                        float min = Float.parseFloat(daily.getJSONObject(i).getJSONObject("temp").get("min").toString());
+                        float max = Float.parseFloat(daily.getJSONObject(i).getJSONObject("temp").get("max").toString());
+                        linedata[i] = (min<0)?0:min;
+                        linedata2[i] = (max<0)?0:max;
                     }
 
                 } catch (ExecutionException | InterruptedException | JSONException e) {
@@ -94,17 +109,26 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Función que muestra un toast con un texto pasado por parámetro
+     * @param text texto a mostrar
+     */
+    public void showToast(String text){
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+    }
+
     //Introduce una ciudad y si la encuentra devuelve lat y lon del JSON 
-    public void getCity (String city){
-        if(city.equals("")){
-           System.out.println("No se ha introducido ninguna ciudad");
-        }else{
-            if(city.length()<0){
-               System.out.println("No se ha introducido ninguna ciudad");
-            }else{
-                if(city.matches("[0-9]+")){
-                    System.out.println("No se ha introducido una ciudad válida");
-                }else{
+    public boolean getCity(String city) {
+        boolean getCity = false;
+        if (city.equals("")) {
+            showToast("No se ha introducido ninguna ciudad");
+        } else {
+            if (city.length() < 0) {
+                showToast("No se ha introducido ninguna ciudad");
+            } else {
+                if (city.matches("[0-9]+")) {
+                    showToast("No se ha introducido una ciudad válida");
+                } else {
                     try {
                         JSONArray json = new JSONArray(readJSONFromAsset());
                         for (int i = 0; i < json.length(); i++) {
@@ -112,7 +136,8 @@ public class MainActivity extends AppCompatActivity {
                             if (jsonObject.getString("city").equals(city)) {
                                 lat = jsonObject.getString("lat");
                                 lon = jsonObject.getString("lng");
-                                System.out.println("Latitud: " + lat + " Longitud: " + lon);
+                                showToast("Ciudad cargada correctamente");
+                                getCity = true;
                             }
                         }
                     } catch (JSONException e) {
@@ -122,7 +147,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+        return getCity;
     }
+
+    /**
+     * Método que lee el JSON con los municipios.
+     *
+     * @return devuelve el JSON como String
+     */
     public String readJSONFromAsset() {
         String json = null;
         try {
@@ -137,58 +169,60 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
         return json;
-    } 
-    /**
-     *  JSONArray weather = json.getJSONArray("weather");
-     *                     setTextView("Municipio: " + json.get("name").toString() + "\n" +
-     *                             "Temperatura Actual= " + main.get("temp").toString() + "ªC" + "\n" +
-     *                             "Temperatura Máxima = " + main.get("temp_max").toString() + "ªC" + "\n" +
-     *                             "Temperatura Mínima = " + main.get("temp_min").toString() + "ªC" + "\n" +
-     *                             "Humedad = " + main.get("humidity").toString() + "%" + "\n" +
-     *                             "Descripción: " + weather.getJSONObject(0).get("description").toString().substring(0, 1).toUpperCase() + weather.getJSONObject(0).get("description").toString().substring(1));
-     */
+    }
 
     /**
      * Método que pulsando el botón, muestra la gráfica de temperaturas
      */
     public void drawChart(View view) {
-        System.out.println("Dibujo");
+        this.boton.setEnabled(false);
         setXdata(days);
         LineChartView linechartview = new LineChartView(this);
         linechartview.setChartdate(xdata, yfata, linedata, linedata2);
-        this.root = (LinearLayout) findViewById(R.id.view);
-        this.root.invalidate();
+
+        this.root.removeAllViews();
         this.root.addView(linechartview);
+
     }
 
-    public void setXdata(String[] days){
+    /**
+     * Setea los datos de los Días en el ejeX
+     * @param days días de la semana
+     */
+    public void setXdata(String[] days) {
         for (int i = 0; i < this.xdata.length; i++) {
             this.xdata[i] = setDay(days[i]);
         }
     }
 
-    public String setDay(String day){
+    /**
+     * Método que recogiendo el Día, devuelve su abreviatura.
+     *
+     * @param day Día de la semana
+     * @return abreviatura del día.
+     */
+    public String setDay(String day) {
         String setDay = "";
-        switch (day){
-            case "lunes" :
+        switch (day) {
+            case "lunes":
                 setDay = "L";
                 break;
-            case "martes" :
+            case "martes":
                 setDay = "M";
                 break;
-            case "miércoles" :
+            case "miércoles":
                 setDay = "X";
                 break;
-            case "jueves" :
+            case "jueves":
                 setDay = "J";
                 break;
-            case "viernes" :
+            case "viernes":
                 setDay = "V";
                 break;
-            case "sábado" :
+            case "sábado":
                 setDay = "S";
                 break;
-            case "domingo" :
+            case "domingo":
                 setDay = "D";
                 break;
         }
@@ -238,6 +272,10 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+        /**
+         * Control de errores y pinta
+         * @param canvas
+         */
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
@@ -245,9 +283,7 @@ public class MainActivity extends AppCompatActivity {
                 if (yMaxdata() >= lineMaxdata()) {
                     drawAxis(canvas);
                 }
-
             }
-
         }
 
         // draw
@@ -264,7 +300,14 @@ public class MainActivity extends AppCompatActivity {
             minCriterion = widthCriterion > hightCriterion ? hightCriterion / 2 : widthCriterion / 2;
             // Start painting the underlying background
             daxesPaint = new Paint();
-            daxesPaint.setColor(Color.BLACK);
+            switch (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) {
+                case Configuration.UI_MODE_NIGHT_YES:
+                    daxesPaint.setColor(Color.WHITE);
+                    break;
+                case Configuration.UI_MODE_NIGHT_NO:
+                    daxesPaint.setColor(Color.BLACK);
+                    break;
+            }
             daxesPaint.setAntiAlias(true);  // Remove the jagged effect
             daxesPaint.setStrokeWidth(7.0f);
             drawDaxes(canvas, daxesPaint);
@@ -289,13 +332,13 @@ public class MainActivity extends AppCompatActivity {
             // Start y Draw a coordinate system
             canvas.drawLine(widthCriterion, hightCriterion, widthCriterion, hightCriterion * (yCopies - 1), p);
             // draw y horn
-            canvas.drawLine(widthCriterion - minCriterion, hightCriterion + minCriterion, widthCriterion + 2, hightCriterion, p);
-            canvas.drawLine(widthCriterion, hightCriterion, widthCriterion + minCriterion - 2, hightCriterion + minCriterion, p);
+            //canvas.drawLine(widthCriterion - minCriterion, hightCriterion + minCriterion, widthCriterion + 2, hightCriterion, p);
+            //canvas.drawLine(widthCriterion, hightCriterion, widthCriterion + minCriterion - 2, hightCriterion + minCriterion, p);
             // Start x Draw a coordinate system
             canvas.drawLine(widthCriterion - 4, hightCriterion * (yCopies - 1), widthCriterion * (xCopies - 1), hightCriterion * (yCopies - 1), p);
             // draw x horn
-            canvas.drawLine(widthCriterion * (xCopies - 1) - minCriterion, hightCriterion * (yCopies - 1) - minCriterion, widthCriterion * (xCopies - 1), hightCriterion * (yCopies - 1) + 2, p);
-            canvas.drawLine(widthCriterion * (xCopies - 1) - minCriterion, hightCriterion * (yCopies - 1) + minCriterion, widthCriterion * (xCopies - 1), hightCriterion * (yCopies - 1) - 2, p);
+            //canvas.drawLine(widthCriterion * (xCopies - 1) - minCriterion, hightCriterion * (yCopies - 1) - minCriterion, widthCriterion * (xCopies - 1), hightCriterion * (yCopies - 1) + 2, p);
+            //canvas.drawLine(widthCriterion * (xCopies - 1) - minCriterion, hightCriterion * (yCopies - 1) + minCriterion, widthCriterion * (xCopies - 1), hightCriterion * (yCopies - 1) - 2, p);
 
         }
 
